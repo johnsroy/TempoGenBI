@@ -84,34 +84,64 @@ export default async function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-20 bg-blue-600 text-white">
-        <div className="container mx-auto px-4">
+      <section className="py-24 relative overflow-hidden">
+        {/* Glassmorphic background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90"></div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=1200&q=80')] bg-cover opacity-10 mix-blend-overlay"></div>
+        <div className="absolute -top-20 -right-20 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold mb-2">$1M+</div>
-              <div className="text-blue-100">Funding Raised</div>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
+              <div className="relative p-8">
+                <div className="text-5xl font-bold mb-3 text-white">10M+</div>
+                <div className="text-blue-100 text-lg">
+                  Data Points Analyzed
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">500+</div>
-              <div className="text-blue-100">Happy Customers</div>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
+              <div className="relative p-8">
+                <div className="text-5xl font-bold mb-3 text-white">500+</div>
+                <div className="text-blue-100 text-lg">Enterprise Clients</div>
+              </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">99.9%</div>
-              <div className="text-blue-100">Uptime Guaranteed</div>
+            <div className="relative group">
+              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
+              <div className="relative p-8">
+                <div className="text-5xl font-bold mb-3 text-white">99.9%</div>
+                <div className="text-blue-100 text-lg">Accuracy Rate</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="py-24 bg-white" id="pricing">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
+      <section className="py-32 relative overflow-hidden" id="pricing">
+        {/* Subtle background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white to-blue-50/30 opacity-80"></div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-40 right-20 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-40 left-20 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-20">
+            <div className="inline-block mb-3 px-4 py-1 bg-blue-50/50 backdrop-blur-sm rounded-full text-blue-600 text-sm font-medium">
+              Flexible Plans
+            </div>
+            <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Choose the perfect plan for your needs. No hidden fees.
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Choose the perfect plan for your data visualization needs. No
+              hidden fees or complicated pricing structures.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -123,20 +153,37 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied customers who trust us with their
-            business.
-          </p>
-          <a
-            href="/dashboard"
-            className="inline-flex items-center px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Get Started Now
-            <ArrowUpRight className="ml-2 w-4 h-4" />
-          </a>
+      <section className="py-32 relative overflow-hidden">
+        {/* Glassmorphic background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 opacity-80"></div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?w=1200&q=80')] bg-cover opacity-5"></div>
+        <div className="absolute top-20 right-20 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div className="absolute bottom-20 left-20 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto relative">
+            {/* Glassmorphic card */}
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-xl rounded-2xl border border-white/30 shadow-xl"></div>
+
+            <div className="relative p-12 text-center">
+              <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Ready to Transform Your Data?
+              </h2>
+              <p className="text-gray-600 mb-10 max-w-2xl mx-auto text-lg">
+                Join thousands of data analysts and business leaders who are
+                unlocking insights with GenBI's powerful visualization platform.
+              </p>
+              <a
+                href="/dashboard"
+                className="inline-flex items-center px-8 py-4 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:opacity-90 transition-all text-lg font-medium shadow-lg shadow-blue-500/20"
+              >
+                Start Visualizing Now
+                <ArrowUpRight className="ml-2 w-5 h-5" />
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
