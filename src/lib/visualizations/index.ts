@@ -75,7 +75,202 @@ export async function processQuery(
   }
 }
 
-// Upload a dataset
+// Upload a dataset with chunking support for large files
+export async function uploadChunkedDataset(
+  name: string,
+  description: string,
+  file: File,
+  userId: string,
+  onProgress?: (progress: number) => void,
+  preProcessedData?: any[],
+  headers?: string[],
+): Promise<any> {
+  try {
+    // If we have pre-processed data, use it directly
+    if (preProcessedData && headers) {
+      const response = await fetch("/api/visualizations/upload-dataset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          fileType: file.type,
+          data: preProcessedData,
+          userId,
+          headers,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to upload dataset");
+      }
+
+      if (onProgress) onProgress(100);
+      return await response.json();
+    }
+
+    // For large files, use chunked upload
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    let uploadedChunks = 0;
+    let sessionId =
+      Date.now().toString() + "-" + Math.random().toString(36).substring(2, 15);
+    let parsedData: any[] = [];
+    let columnHeaders: string[] = [];
+
+    // Function to read a chunk of the file
+    const readChunk = (start: number, end: number): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            resolve(e.target.result as string);
+          } else {
+            reject(new Error("Failed to read file chunk"));
+          }
+        };
+        reader.onerror = () => reject(new Error("Error reading file chunk"));
+
+        // Read the specified chunk of the file
+        const blob = file.slice(start, end);
+        reader.readAsText(blob);
+      });
+    };
+
+    // Process the first chunk to get headers
+    const firstChunk = await readChunk(0, Math.min(CHUNK_SIZE, file.size));
+    const lines = firstChunk.split("\n");
+
+    if (lines.length === 0 || !lines[0].includes(",")) {
+      throw new Error(
+        "Invalid CSV format. The file must contain comma-separated values with a header row.",
+      );
+    }
+
+    columnHeaders = lines[0].split(",").map((header) => header.trim());
+
+    // Validate that we have at least one header
+    if (
+      columnHeaders.length === 0 ||
+      (columnHeaders.length === 1 && !columnHeaders[0])
+    ) {
+      throw new Error("Invalid CSV format. Could not detect column headers.");
+    }
+
+    // Process each chunk
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+      const start = chunkIndex * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, file.size);
+
+      // Read the chunk
+      const chunkText = await readChunk(start, end);
+
+      // Parse the chunk (handle partial lines at the end)
+      let chunkLines = chunkText.split("\n");
+
+      // If this is not the first chunk, the first line might be incomplete
+      // We'll skip the header row for all chunks except the first
+      const startLine = chunkIndex === 0 ? 1 : 0;
+
+      // Process each line in the chunk
+      for (let i = startLine; i < chunkLines.length; i++) {
+        if (!chunkLines[i].trim()) continue;
+
+        const values = chunkLines[i].split(",");
+        const row: Record<string, string | number> = {};
+
+        columnHeaders.forEach((header, index) => {
+          const value = values[index]?.trim() || "";
+          // Try to convert to number if possible
+          row[header] = isNaN(Number(value)) ? value : Number(value);
+        });
+
+        parsedData.push(row);
+
+        // If we've accumulated enough rows, send a batch
+        if (parsedData.length >= 1000) {
+          await uploadBatch(parsedData, chunkIndex, sessionId);
+          parsedData = [];
+        }
+      }
+
+      // Upload any remaining data in this chunk
+      if (parsedData.length > 0) {
+        await uploadBatch(parsedData, chunkIndex, sessionId);
+        parsedData = [];
+      }
+
+      uploadedChunks++;
+      if (onProgress) {
+        onProgress((uploadedChunks / totalChunks) * 100);
+      }
+    }
+
+    // Finalize the upload
+    const finalizeResponse = await fetch(
+      "/api/visualizations/finalize-upload",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          fileType: file.type,
+          userId,
+          sessionId,
+          totalChunks,
+          headers: columnHeaders,
+        }),
+      },
+    );
+
+    if (!finalizeResponse.ok) {
+      const errorData = await finalizeResponse.json();
+      throw new Error(errorData.error || "Failed to finalize dataset upload");
+    }
+
+    return await finalizeResponse.json();
+  } catch (error) {
+    console.error("Error uploading dataset:", error);
+    throw error;
+  }
+
+  // Helper function to upload a batch of data
+  async function uploadBatch(
+    data: any[],
+    chunkIndex: number,
+    sessionId: string,
+  ) {
+    const response = await fetch("/api/visualizations/upload-chunk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        data,
+        chunkIndex,
+        sessionId,
+        userId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.error || `Failed to upload chunk ${chunkIndex}`,
+      );
+    }
+
+    return await response.json();
+  }
+}
+
+// Legacy function for backward compatibility
 export async function uploadDataset(
   name: string,
   description: string,
@@ -99,7 +294,8 @@ export async function uploadDataset(
     });
 
     if (!response.ok) {
-      throw new Error("Failed to upload dataset");
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to upload dataset");
     }
 
     return await response.json();

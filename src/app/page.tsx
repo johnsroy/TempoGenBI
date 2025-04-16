@@ -48,32 +48,36 @@ export default async function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
             {[
               {
+                id: "nlq",
                 icon: <Zap className="w-7 h-7" />,
                 title: "Natural Language Queries",
                 description:
                   "Ask questions about your data in plain English and get instant visualizations",
               },
               {
+                id: "security",
                 icon: <Shield className="w-7 h-7" />,
                 title: "Enterprise Security",
                 description:
                   "Bank-grade encryption and compliance for all your sensitive business data",
               },
               {
+                id: "collaboration",
                 icon: <Users className="w-7 h-7" />,
                 title: "Team Collaboration",
                 description:
                   "Share insights and collaborate with your team in real-time across devices",
               },
               {
+                id: "interactive",
                 icon: <CheckCircle2 className="w-7 h-7" />,
                 title: "Interactive Visualizations",
                 description:
                   "Explore your data with dynamic, responsive charts and customizable dashboards",
               },
-            ].map((feature, index) => (
+            ].map((feature) => (
               <FeatureCard
-                key={index}
+                key={feature.id}
                 icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
@@ -95,29 +99,25 @@ export default async function Home() {
 
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
-              <div className="relative p-8">
-                <div className="text-5xl font-bold mb-3 text-white">10M+</div>
-                <div className="text-blue-100 text-lg">
-                  Data Points Analyzed
+            {[
+              {
+                id: "data-points",
+                value: "10M+",
+                label: "Data Points Analyzed",
+              },
+              { id: "clients", value: "500+", label: "Enterprise Clients" },
+              { id: "accuracy", value: "99.9%", label: "Accuracy Rate" },
+            ].map((stat) => (
+              <div key={stat.id} className="relative group">
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
+                <div className="relative p-8">
+                  <div className="text-5xl font-bold mb-3 text-white">
+                    {stat.value}
+                  </div>
+                  <div className="text-blue-100 text-lg">{stat.label}</div>
                 </div>
               </div>
-            </div>
-            <div className="relative group">
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
-              <div className="relative p-8">
-                <div className="text-5xl font-bold mb-3 text-white">500+</div>
-                <div className="text-blue-100 text-lg">Enterprise Clients</div>
-              </div>
-            </div>
-            <div className="relative group">
-              <div className="absolute inset-0 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-lg"></div>
-              <div className="relative p-8">
-                <div className="text-5xl font-bold mb-3 text-white">99.9%</div>
-                <div className="text-blue-100 text-lg">Accuracy Rate</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default async function Home() {
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {plans?.map((item: any) => (
-              <PricingCard key={item.id} item={item} user={user} />
+              <PricingCard key={`plan-${item.id}`} item={item} user={user} />
             ))}
           </div>
         </div>

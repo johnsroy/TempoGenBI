@@ -3,7 +3,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
+import SMTPMessage from "@/components/smtp-message";
 import { signUpAction } from "@/app/actions";
 import Navbar from "@/components/navbar";
 
@@ -38,6 +38,7 @@ export default async function Signup(props: {
               </p>
             </div>
 
+            <SMTPMessage />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name" className="text-sm font-medium">
@@ -91,10 +92,15 @@ export default async function Signup(props: {
               Sign up
             </SubmitButton>
 
+            <div className="mt-2 text-center text-xs text-gray-500">
+              <p>
+                Admin access: <strong>admin@genbi.com</strong>
+              </p>
+            </div>
+
             <FormMessage message={searchParams} />
           </form>
         </div>
-        <SmtpMessage />
       </div>
     </>
   );

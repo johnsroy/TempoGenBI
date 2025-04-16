@@ -13,6 +13,7 @@ type DatasetRequest = {
   fileType: string;
   data: any;
   userId: string;
+  headers?: string[];
 };
 
 serve(async (req) => {
@@ -22,7 +23,7 @@ serve(async (req) => {
   }
 
   try {
-    const { name, description, fileType, data, userId } =
+    const { name, description, fileType, data, userId, headers } =
       (await req.json()) as DatasetRequest;
 
     if (!name || !fileType || !data || !userId) {
@@ -36,12 +37,13 @@ serve(async (req) => {
     }
 
     // Process the dataset
-    // In a real implementation, you would parse the CSV/Excel data
-    // For now, we'll assume data is already parsed into JSON
-
-    // Extract column names from the first row
-    const columns =
-      data.length > 0
+    // Extract column names from the first row or use provided headers
+    const columns = headers
+      ? headers.map((header) => ({
+          name: header,
+          type: typeof data[0]?.[header] || "string",
+        }))
+      : data.length > 0
         ? Object.keys(data[0]).map((key) => ({
             name: key,
             type: typeof data[0][key],
@@ -73,10 +75,13 @@ serve(async (req) => {
 
     if (error) {
       console.error("Error saving dataset:", error);
-      return new Response(JSON.stringify({ error: "Failed to save dataset" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: error.message || "Failed to save dataset" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     return new Response(

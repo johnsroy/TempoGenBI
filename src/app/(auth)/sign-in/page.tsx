@@ -5,6 +5,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import SMTPMessage from "@/components/smtp-message";
 
 interface LoginProps {
   searchParams: Promise<Message>;
@@ -40,6 +41,7 @@ export default async function SignInPage({ searchParams }: LoginProps) {
               </p>
             </div>
 
+            <SMTPMessage />
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -85,6 +87,12 @@ export default async function SignInPage({ searchParams }: LoginProps) {
             >
               Sign in
             </SubmitButton>
+
+            <div className="mt-2 text-center text-xs text-gray-500">
+              <p>
+                Admin access: <strong>admin@genbi.com</strong>
+              </p>
+            </div>
 
             <FormMessage message={message} />
           </form>

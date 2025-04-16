@@ -1,4 +1,7 @@
-import { createServerClient } from "@supabase/ssr";
+import {
+  createServerClient,
+  createClient as createBrowserClient,
+} from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export const createClient = async () => {
@@ -32,6 +35,39 @@ export const createClient = async () => {
           }
         },
       },
-    }
+    },
+  );
+};
+
+export const createAdminClient = async () => {
+  const cookieStore = cookies();
+
+  return createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          try {
+            return cookieStore.getAll().map(({ name, value }) => ({
+              name,
+              value,
+            }));
+          } catch (error) {
+            console.error("Error accessing cookies:", error);
+            return [];
+          }
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            console.error("Error setting cookies:", error);
+          }
+        },
+      },
+    },
   );
 };

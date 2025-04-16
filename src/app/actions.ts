@@ -7,7 +7,7 @@ import { createClient } from "../../supabase/server";
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
-  const fullName = formData.get("full_name")?.toString() || '';
+  const fullName = formData.get("full_name")?.toString() || "";
   const supabase = await createClient();
 
   if (!email || !password) {
@@ -18,14 +18,17 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
 
-  const { data: { user }, error } = await supabase.auth.signUp({
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
         email: email,
-      }
+      },
     },
   });
 
@@ -35,32 +38,38 @@ export const signUpAction = async (formData: FormData) => {
 
   if (user) {
     try {
+      // Check if user already exists in the users table
+      const { data: existingUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
 
-      const { error: updateError } = await supabase
-        .from('users')
-        .insert({
+      // Only insert if user doesn't exist
+      if (!existingUser) {
+        const { error: updateError } = await supabase.from("users").insert({
           id: user.id,
-          user_id: user.id,
           name: fullName,
           email: email,
-          token_identifier: user.id,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
 
-      if (updateError) {
-        // Error handling without console.error
-        return encodedRedirect(
-          "error",
-          "/sign-up",
-          "Error updating user. Please try again.",
-        );
+        if (updateError) {
+          console.error("Error inserting user:", updateError);
+          return encodedRedirect(
+            "error",
+            "/sign-up",
+            "Error creating user profile. Please try again.",
+          );
+        }
       }
     } catch (err) {
-      // Error handling without console.error
+      console.error("Error in sign-up process:", err);
       return encodedRedirect(
         "error",
         "/sign-up",
-        "Error updating user. Please try again.",
+        "Error creating user profile. Please try again.",
       );
     }
   }
@@ -162,14 +171,50 @@ export const signOutAction = async () => {
   return redirect("/sign-in");
 };
 
-export const checkUserSubscription = async (userId: string) => {
+export const checkUserSubscription = async (userId?: string) => {
   const supabase = await createClient();
 
+  // First get the current user if userId is not provided
+  if (!userId) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error("No user found");
+    }
+    userId = userData.user.id;
+  }
+
+  // Check if user is admin by ID
+  const { data: adminData, error: adminError } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  // Get user email for additional check
+  const { data: userData } = await supabase
+    .from("users")
+    .select("email")
+    .eq("id", userId)
+    .maybeSingle();
+
+  // Check if user is admin by email
+  const { data: adminByEmail } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", userData?.email || "")
+    .maybeSingle();
+
+  // If user is admin, they have access to all features
+  if (adminData || adminByEmail || userData?.email === "admin@genbi.com") {
+    return true;
+  }
+
+  // Otherwise check for an active subscription
   const { data: subscription, error } = await supabase
-    .from('subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'active')
+    .from("subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("status", "active")
     .single();
 
   if (error) {

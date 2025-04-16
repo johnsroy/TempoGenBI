@@ -179,16 +179,16 @@ export default function LineChart({
     });
 
     // Add y-axis
-    const yAxisLine = document.createElementNS(
+    const yAxisElement = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "line",
     );
-    yAxisLine.setAttribute("x1", "0");
-    yAxisLine.setAttribute("y1", "0");
-    yAxisLine.setAttribute("x2", "0");
-    yAxisLine.setAttribute("y2", chartHeight.toString());
-    yAxisLine.setAttribute("stroke", "#e5e7eb");
-    chartGroup.appendChild(yAxisLine);
+    yAxisElement.setAttribute("x1", "0");
+    yAxisElement.setAttribute("y1", "0");
+    yAxisElement.setAttribute("x2", "0");
+    yAxisElement.setAttribute("y2", chartHeight.toString());
+    yAxisElement.setAttribute("stroke", "#e5e7eb");
+    chartGroup.appendChild(yAxisElement);
 
     // Add y-axis ticks and labels
     const tickCount = 5;
@@ -235,16 +235,16 @@ export default function LineChart({
     }
 
     // Add x-axis
-    const xAxisLine = document.createElementNS(
+    const xAxisElement = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "line",
     );
-    xAxisLine.setAttribute("x1", "0");
-    xAxisLine.setAttribute("y1", chartHeight.toString());
-    xAxisLine.setAttribute("x2", chartWidth.toString());
-    xAxisLine.setAttribute("y2", chartHeight.toString());
-    xAxisLine.setAttribute("stroke", "#e5e7eb");
-    chartGroup.appendChild(xAxisLine);
+    xAxisElement.setAttribute("x1", "0");
+    xAxisElement.setAttribute("y1", chartHeight.toString());
+    xAxisElement.setAttribute("x2", chartWidth.toString());
+    xAxisElement.setAttribute("y2", chartHeight.toString());
+    xAxisElement.setAttribute("stroke", "#e5e7eb");
+    chartGroup.appendChild(xAxisElement);
   };
 
   return (

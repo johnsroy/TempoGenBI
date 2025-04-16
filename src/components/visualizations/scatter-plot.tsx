@@ -3,17 +3,17 @@
 import { useEffect, useRef } from "react";
 import { ChartConfig } from "@/lib/visualizations";
 
-interface BarChartProps {
+interface ScatterPlotProps {
   data: any[];
   config: ChartConfig;
   className?: string;
 }
 
-export default function BarChart({
+export default function ScatterPlot({
   data,
   config,
   className = "",
-}: BarChartProps) {
+}: ScatterPlotProps) {
   const chartRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,10 +28,24 @@ export default function BarChart({
     const container = chartRef.current;
     container.innerHTML = ""; // Clear previous chart
 
-    const { xAxis = "x", yAxis = "y", colors = ["#4F46E5"] } = config;
+    const {
+      xAxis = "x",
+      yAxis = "y",
+      colors = ["#4F46E5"],
+      series = [],
+    } = config;
 
     // Find min and max values for scaling
-    const maxValue = Math.max(...data.map((item) => Number(item[yAxis]) || 0));
+    const xValues = data.map((item) => Number(item[xAxis]) || 0);
+    const yValues = data.map((item) => Number(item[yAxis]) || 0);
+    const xMin = Math.min(...xValues);
+    const xMax = Math.max(...xValues);
+    const yMin = Math.min(...yValues);
+    const yMax = Math.max(...yValues);
+
+    // Add padding to min/max values
+    const xPadding = (xMax - xMin) * 0.1;
+    const yPadding = (yMax - yMin) * 0.1;
 
     // Set dimensions
     const width = container.clientWidth;
@@ -70,33 +84,36 @@ export default function BarChart({
     );
     svg.appendChild(chartGroup);
 
-    // Draw bars
-    const barWidth = (chartWidth / data.length) * 0.8;
-    const barSpacing = (chartWidth / data.length) * 0.2;
-
+    // Draw points
     data.forEach((item, index) => {
-      const value = Number(item[yAxis]) || 0;
-      const barHeight = (value / maxValue) * chartHeight;
-      const x = index * (barWidth + barSpacing) + barSpacing / 2;
-      const y = chartHeight - barHeight;
+      const x =
+        (((Number(item[xAxis]) || 0) - xMin) / (xMax - xMin || 1)) * chartWidth;
+      const y =
+        chartHeight -
+        (((Number(item[yAxis]) || 0) - yMin) / (yMax - yMin || 1)) *
+          chartHeight;
 
-      // Create bar
-      const bar = document.createElementNS(
+      // Create point
+      const point = document.createElementNS(
         "http://www.w3.org/2000/svg",
-        "rect",
+        "circle",
       );
-      bar.setAttribute("x", x.toString());
-      bar.setAttribute("y", y.toString());
-      bar.setAttribute("width", barWidth.toString());
-      bar.setAttribute("height", barHeight.toString());
-      bar.setAttribute("fill", colors[0]);
-      bar.setAttribute("rx", "4"); // Rounded corners
-      bar.setAttribute("class", "transition-all duration-300 hover:opacity-80");
+      point.setAttribute("cx", x.toString());
+      point.setAttribute("cy", y.toString());
+      point.setAttribute("r", "6");
+      point.setAttribute("fill", colors[0]);
+      point.setAttribute("opacity", "0.7");
+      point.setAttribute(
+        "class",
+        "transition-all duration-300 hover:opacity-100 hover:r-8",
+      );
 
       // Add tooltip on hover
-      bar.addEventListener("mouseover", (e) => {
+      point.addEventListener("mouseover", (e) => {
+        point.setAttribute("r", "8");
+
         const tooltip = document.createElement("div");
-        tooltip.textContent = `${item[xAxis]}: ${item[yAxis]}`;
+        tooltip.textContent = `${xAxis}: ${item[xAxis]}, ${yAxis}: ${item[yAxis]}`;
         tooltip.style.position = "absolute";
         tooltip.style.left = `${e.pageX + 10}px`;
         tooltip.style.top = `${e.pageY - 30}px`;
@@ -110,7 +127,7 @@ export default function BarChart({
         document.body.appendChild(tooltip);
       });
 
-      bar.addEventListener("mousemove", (e) => {
+      point.addEventListener("mousemove", (e) => {
         const tooltip = document.getElementById("chart-tooltip");
         if (tooltip) {
           tooltip.style.left = `${e.pageX + 10}px`;
@@ -118,45 +135,35 @@ export default function BarChart({
         }
       });
 
-      bar.addEventListener("mouseout", () => {
+      point.addEventListener("mouseout", () => {
+        point.setAttribute("r", "6");
+
         const tooltip = document.getElementById("chart-tooltip");
         if (tooltip) {
           document.body.removeChild(tooltip);
         }
       });
 
-      chartGroup.appendChild(bar);
-
-      // Add x-axis labels
-      const label = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "text",
-      );
-      label.textContent = item[xAxis]?.toString() || "";
-      label.setAttribute("x", (x + barWidth / 2).toString());
-      label.setAttribute("y", (chartHeight + 20).toString());
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute("class", "text-xs text-gray-500");
-      chartGroup.appendChild(label);
+      chartGroup.appendChild(point);
     });
 
     // Add y-axis
-    const yAxisElement = document.createElementNS(
+    const yAxisLine = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "line",
     );
-    yAxisElement.setAttribute("x1", "0");
-    yAxisElement.setAttribute("y1", "0");
-    yAxisElement.setAttribute("x2", "0");
-    yAxisElement.setAttribute("y2", chartHeight.toString());
-    yAxisElement.setAttribute("stroke", "#e5e7eb");
-    chartGroup.appendChild(yAxisElement);
+    yAxisLine.setAttribute("x1", "0");
+    yAxisLine.setAttribute("y1", "0");
+    yAxisLine.setAttribute("x2", "0");
+    yAxisLine.setAttribute("y2", chartHeight.toString());
+    yAxisLine.setAttribute("stroke", "#e5e7eb");
+    chartGroup.appendChild(yAxisLine);
 
     // Add y-axis ticks and labels
-    const tickCount = 5;
-    for (let i = 0; i <= tickCount; i++) {
-      const y = chartHeight * (1 - i / tickCount);
-      const value = maxValue * (i / tickCount);
+    const yTickCount = 5;
+    for (let i = 0; i <= yTickCount; i++) {
+      const y = chartHeight * (i / yTickCount);
+      const value = yMax - (i / yTickCount) * (yMax - yMin);
 
       // Tick line
       const tick = document.createElementNS(
@@ -188,7 +195,9 @@ export default function BarChart({
         "http://www.w3.org/2000/svg",
         "text",
       );
-      label.textContent = value.toLocaleString();
+      label.textContent = value.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      });
       label.setAttribute("x", "-10");
       label.setAttribute("y", (y + 4).toString());
       label.setAttribute("text-anchor", "end");
@@ -197,23 +206,69 @@ export default function BarChart({
     }
 
     // Add x-axis
-    const xAxisElement = document.createElementNS(
+    const xAxisLine = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "line",
     );
-    xAxisElement.setAttribute("x1", "0");
-    xAxisElement.setAttribute("y1", chartHeight.toString());
-    xAxisElement.setAttribute("x2", chartWidth.toString());
-    xAxisElement.setAttribute("y2", chartHeight.toString());
-    xAxisElement.setAttribute("stroke", "#e5e7eb");
-    chartGroup.appendChild(xAxisElement);
+    xAxisLine.setAttribute("x1", "0");
+    xAxisLine.setAttribute("y1", chartHeight.toString());
+    xAxisLine.setAttribute("x2", chartWidth.toString());
+    xAxisLine.setAttribute("y2", chartHeight.toString());
+    xAxisLine.setAttribute("stroke", "#e5e7eb");
+    chartGroup.appendChild(xAxisLine);
+
+    // Add x-axis ticks and labels
+    const xTickCount = 5;
+    for (let i = 0; i <= xTickCount; i++) {
+      const x = chartWidth * (i / xTickCount);
+      const value = xMin + (i / xTickCount) * (xMax - xMin);
+
+      // Tick line
+      const tick = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+      tick.setAttribute("x1", x.toString());
+      tick.setAttribute("y1", chartHeight.toString());
+      tick.setAttribute("x2", x.toString());
+      tick.setAttribute("y2", (chartHeight + 5).toString());
+      tick.setAttribute("stroke", "#e5e7eb");
+      chartGroup.appendChild(tick);
+
+      // Grid line
+      const grid = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line",
+      );
+      grid.setAttribute("x1", x.toString());
+      grid.setAttribute("y1", "0");
+      grid.setAttribute("x2", x.toString());
+      grid.setAttribute("y2", chartHeight.toString());
+      grid.setAttribute("stroke", "#f3f4f6");
+      grid.setAttribute("stroke-dasharray", "4");
+      chartGroup.appendChild(grid);
+
+      // Label
+      const label = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "text",
+      );
+      label.textContent = value.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      });
+      label.setAttribute("x", x.toString());
+      label.setAttribute("y", (chartHeight + 20).toString());
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("class", "text-xs text-gray-500");
+      chartGroup.appendChild(label);
+    }
   };
 
   return (
     <div
       ref={chartRef}
       className={`w-full h-full min-h-[300px] ${className}`}
-      aria-label={`Bar chart: ${config.title}`}
+      aria-label={`Scatter plot: ${config.title}`}
     />
   );
 }
